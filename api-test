@@ -1,0 +1,88 @@
+package com.example.progetto;
+
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+import com.example.progetto.Service.Service;
+import com.example.progetto.school.Etudiant;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class ProgettoApplicationTests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private Service etudiantService;
+
+    @Test
+    public void testUpdate() throws Exception {
+       
+        Long idSimulato = 1L;
+        Etudiant etudiantSimulato = new Etudiant();
+        etudiantSimulato.setNome("alberto");
+        etudiantSimulato.setTelephone(22222);
+        etudiantSimulato.setAdresse("forte");
+
+        Etudiant updatedEtudiant = new Etudiant();
+        updatedEtudiant.setNome("nuovoNome");
+        updatedEtudiant.setTelephone(3245650);
+        updatedEtudiant.setAdresse("nuovoIndirizzo");
+
+        
+        given(etudiantService.getEtudiantById(idSimulato)).willReturn(etudiantSimulato);
+        given(etudiantService.modiEtudiant(idSimulato, updatedEtudiant)).willReturn(updatedEtudiant);
+
+        mockMvc.perform(put("/etudiant/update/{id}", idSimulato)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(updatedEtudiant)))
+
+               
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.nome").value(updatedEtudiant.getNome()))
+                .andExpect(jsonPath("$.telephone").value(updatedEtudiant.getTelephone()))
+                .andExpect(jsonPath("$.adresse").value(updatedEtudiant.getAdresse()));
+    }
+    @Test
+    public void testCreate() throws Exception {
+        // Dato: Preparare un oggetto Etudiant simulato da creare
+        Etudiant etudiantDaCreare = new Etudiant();
+        etudiantDaCreare.setNome("nomeCreazione");
+        etudiantDaCreare.setTelephone(12345);
+        etudiantDaCreare.setAdresse("indirizzoCreazione");
+
+        // Simuliamo il comportamento del servizio per restituire l'etudiant creato
+        given(etudiantService.crEtudiant(any(Etudiant.class))).willReturn(etudiantDaCreare);
+        
+        mockMvc.perform(post("/etudiant/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(etudiantDaCreare)))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.nome").value(etudiantDaCreare.getNome()))
+                .andExpect(jsonPath("$.telephone").value(etudiantDaCreare.getTelephone()))
+                .andExpect(jsonPath("$.adresse").value(etudiantDaCreare.getAdresse()));
+    }
+
+    
+}
