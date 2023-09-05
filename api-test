@@ -5,10 +5,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,6 +40,7 @@ public class ProgettoApplicationTests {
     private Service etudiantService;
 
     @Test
+    //update
     public void testUpdate() throws Exception {
        
         Long idSimulato = 1L;
@@ -64,6 +70,7 @@ public class ProgettoApplicationTests {
                 .andExpect(jsonPath("$.adresse").value(updatedEtudiant.getAdresse()));
     }
     @Test
+    //create
     public void testCreate() throws Exception {
         // Dato: Preparare un oggetto Etudiant simulato da creare
         Etudiant etudiantDaCreare = new Etudiant();
@@ -83,6 +90,59 @@ public class ProgettoApplicationTests {
                 .andExpect(jsonPath("$.telephone").value(etudiantDaCreare.getTelephone()))
                 .andExpect(jsonPath("$.adresse").value(etudiantDaCreare.getAdresse()));
     }
+
+    @Test
+    //delete
+    public void testDelete() throws Exception {
+        // Dato: ID simulato da eliminare
+        Long idDaEliminare = 10L;
+
+        // Simuliamo il comportamento del servizio per la cancellazione dell'etudiant
+        given(etudiantService.supprimeString(idDaEliminare)).willReturn("Etudiant eliminato con successo");
+
+        mockMvc.perform(delete("/etudiant/delete/{id}", idDaEliminare))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(content().string("Etudiant eliminato con successo"));
+    }
+    
+
+@Test
+//getall
+public void testGetAllEtudiants() throws Exception {
+    List<Etudiant> etudiantsSimulati = new ArrayList<>();
+    
+    Etudiant etudiant1 = new Etudiant();
+    etudiant1.setId(1L);
+    etudiant1.setNome("alberto");
+    etudiant1.setTelephone(22222);
+    etudiant1.setAdresse("forte");
+
+    Etudiant etudiant2 = new Etudiant();
+    etudiant2.setId(2L);
+    etudiant2.setNome("maria");
+    etudiant2.setTelephone(33333);
+    etudiant2.setAdresse("casa");
+
+    etudiantsSimulati.add(etudiant1);
+    etudiantsSimulati.add(etudiant2);
+
+    // Simuliamo il comportamento del servizio per restituire la lista di studenti simulati
+    given(etudiantService.Lire()).willReturn(etudiantsSimulati);
+
+    mockMvc.perform(get("/etudiant/read"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1L))
+            .andExpect(jsonPath("$[0].nome").value("alberto"))
+            .andExpect(jsonPath("$[0].telephone").value(22222))
+            .andExpect(jsonPath("$[0].adresse").value("forte"))
+            .andExpect(jsonPath("$[1].id").value(2L))
+            .andExpect(jsonPath("$[1].nome").value("maria"))
+            .andExpect(jsonPath("$[1].telephone").value(33333))
+            .andExpect(jsonPath("$[1].adresse").value("casa"));
+}
+  
+    
 
     
 }
